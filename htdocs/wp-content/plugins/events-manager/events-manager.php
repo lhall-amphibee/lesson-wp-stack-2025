@@ -14,7 +14,7 @@
  * Text Domain:      events-manager
  * Domain Path:      /languages
  *
- * @package MyCustomPlugin
+ * @package EventsManager
  */
 
 // Prevent direct access
@@ -103,3 +103,61 @@ function register_categorie_taxonomy() {
     register_taxonomy('categorie-evenement', 'evenement', $args);
 }
 add_action('init', 'register_categorie_taxonomy');
+
+function custom_metabox()
+{
+    add_meta_box(
+        'event_metabox',
+        'Informations additionnelles',
+        'render_custom_metabox',
+        'evenement',
+        'normal',
+        'default'
+    );
+}
+function render_custom_metabox($post)
+{
+    $date_value = get_post_meta($post->ID, 'custom_date_field', true); // Get the saved date value
+    ?>
+    <label for="custom_date_field">Date de l'événement :</label>
+    <input type="date" id="custom_date_field" name="custom_date_field" value="<?php echo esc_attr($date_value); ?>">
+    <?php
+}
+
+function save_custom_metabox_data($post_id)
+{
+    if (array_key_exists('custom_date_field', $_POST)) {
+        update_post_meta(
+            $post_id,
+            'custom_date_field',
+            sanitize_text_field($_POST['custom_date_field'])
+        );
+    }
+}
+
+add_action('add_meta_boxes', 'custom_metabox');
+add_action('save_post', 'save_custom_metabox_data');
+
+function get_event_date($post_id = null) {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+
+    $date = get_post_meta($post_id, 'custom_date_field', true);
+    if ($date) {
+        return date_i18n(get_option('date_format'), strtotime($date));
+    }
+    return '';
+}
+
+function inject_event_date_after_content($block_content, $block) {
+    // Only proceed if this is the last block and we're on an event post
+    if (get_post_type() === 'evenement' && isset($block['blockName']) && $block['blockName'] === 'core/post-content') {
+        $date = get_event_date();
+        if ($date) {
+            $block_content .= '<div class="event-date">Date: ' . esc_html($date) . '</div>';
+        }
+    }
+    return $block_content;
+}
+add_filter('render_block', 'inject_event_date_after_content', 10, 2);
