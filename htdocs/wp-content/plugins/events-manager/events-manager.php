@@ -29,6 +29,7 @@ if (!defined('ABSPATH')) {
 
 
 require_once 'inc/CustomFields.php';
+require_once 'inc/Filters.php';
 require_once 'inc/Metaboxes.php';
 require_once 'inc/PostType.php';
 require_once 'inc/Taxonomies.php';
@@ -37,3 +38,4 @@ require_once 'inc/Taxonomies.php';
 (new PostType())->register();
 (new Taxonomies())->register();
 (new \EventsManager\CustomFields())->register();
+(new \EventsManager\Filters())->register();
